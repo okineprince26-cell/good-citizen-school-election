@@ -6,79 +6,97 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 );
 
-const app = document.querySelector('#app');
+const app = document.getElementById('app');
 
-function showLogin(message = '') {
-  app.innerHTML = `
-    <main>
-      <h1>GOOD CITIZEN SCHOOL</h1>
-      <h2>Admin Login</h2>
+function loginScreen(message) {
+  app.innerHTML = '';
 
-      <input id="email" type="email" placeholder="Admin email">
+  const title = document.createElement('h1');
+  title.textContent = 'GOOD CITIZEN SCHOOL';
 
-      <input id="password" type="password" placeholder="Password">
+  const heading = document.createElement('h2');
+  heading.textContent = 'Admin Login';
 
-      <button id="login" type="button">Login</button>
+  const email = document.createElement('input');
+  email.id = 'email';
+  email.type = 'email';
+  email.placeholder = 'Admin email';
 
-      <p id="message">${message}</p>
-    </main>
-  `;
+  const password = document.createElement('input');
+  password.id = 'password';
+  password.type = 'password';
+  password.placeholder = 'Password';
 
-  const loginButton = document.querySelector('#login');
+  const button = document.createElement('button');
+  button.id = 'login';
+  button.type = 'button';
+  button.textContent = 'Login';
 
-  loginButton.addEventListener('click', async function () {
-    const email = document.querySelector('#email').value.trim();
-    const password = document.querySelector('#password').value;
-    const messageBox = document.querySelector('#message');
+  const msg = document.createElement('p');
+  msg.id = 'message';
+  msg.textContent = message || '';
 
-    if (!email || !password) {
-      messageBox.textContent = 'Please enter your email and password.';
+  app.appendChild(title);
+  app.appendChild(heading);
+  app.appendChild(email);
+  app.appendChild(document.createElement('br'));
+  app.appendChild(password);
+  app.appendChild(document.createElement('br'));
+  app.appendChild(button);
+  app.appendChild(msg);
+
+  button.addEventListener('click', async function () {
+    const emailValue = email.value.trim();
+    const passwordValue = password.value;
+
+    if (!emailValue || !passwordValue) {
+      msg.textContent = 'Please enter your email and password.';
       return;
     }
 
-    loginButton.disabled = true;
-    loginButton.textContent = 'Logging in...';
-    messageBox.textContent = '';
+    button.disabled = true;
+    button.textContent = 'Logging in...';
+    msg.textContent = '';
 
     try {
       const result = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+        email: emailValue,
+        password: passwordValue
       });
 
       if (result.error) {
-        messageBox.textContent = result.error.message;
-        loginButton.disabled = false;
-        loginButton.textContent = 'Login';
+        msg.textContent = result.error.message;
+        button.disabled = false;
+        button.textContent = 'Login';
         return;
       }
 
-      if (!result.data.user) {
-        messageBox.textContent = 'Login failed.';
-        loginButton.disabled = false;
-        loginButton.textContent = 'Login';
+      if (!result.data || !result.data.user) {
+        msg.textContent = 'Login failed.';
+        button.disabled = false;
+        button.textContent = 'Login';
         return;
       }
 
-      await loadDashboard();
+      dashboard();
 
     } catch (error) {
-      messageBox.textContent = error.message || 'Login error.';
-      loginButton.disabled = false;
-      loginButton.textContent = 'Login';
+      msg.textContent = error.message || 'An unexpected error occurred.';
+      button.disabled = false;
+      button.textContent = 'Login';
     }
   });
 }
 
-async function loadDashboard() {
-  const result = await supabase.auth.getUser();
+async function dashboard() {
+  const userResult = await supabase.auth.getUser();
 
-  if (result.error || !result.data.user) {
-    showLogin();
+  if (userResult.error || !userResult.data.user) {
+    loginScreen();
     return;
   }
 
-  const user = result.data.user;
+  const user = userResult.data.user;
 
   const settingsResult = await supabase
     .from('election_settings')
@@ -87,22 +105,32 @@ async function loadDashboard() {
     .maybeSingle();
 
   if (settingsResult.error) {
-    app.innerHTML = `
-      <main>
-        <h1>GOOD CITIZEN SCHOOL</h1>
-        <h2>Admin Dashboard</h2>
+    app.innerHTML = '';
 
-        <p>Logged in as: ${user.email}</p>
+    const title = document.createElement('h1');
+    title.textContent = 'GOOD CITIZEN SCHOOL';
 
-        <p>${settingsResult.error.message}</p>
+    const heading = document.createElement('h2');
+    heading.textContent = 'Admin Dashboard';
 
-        <button id="logout">Logout</button>
-      </main>
-    `;
+    const loggedIn = document.createElement('p');
+    loggedIn.textContent = 'Logged in as: ' + user.email;
 
-    document.querySelector('#logout').addEventListener('click', async function () {
+    const error = document.createElement('p');
+    error.textContent = settingsResult.error.message;
+
+    const logout = document.createElement('button');
+    logout.textContent = 'Logout';
+
+    app.appendChild(title);
+    app.appendChild(heading);
+    app.appendChild(loggedIn);
+    app.appendChild(error);
+    app.appendChild(logout);
+
+    logout.addEventListener('click', async function () {
       await supabase.auth.signOut();
-      showLogin();
+      loginScreen();
     });
 
     return;
@@ -110,56 +138,59 @@ async function loadDashboard() {
 
   const settings = settingsResult.data;
 
-  app.innerHTML = `
-    <main>
-      <h1>GOOD CITIZEN SCHOOL</h1>
+  app.innerHTML = '';
 
-      <h2>Student Prefect Election 2026</h2>
+  const title = document.createElement('h1');
+  title.textContent = 'GOOD CITIZEN SCHOOL';
 
-      <p>Admin: ${user.email}</p>
+  const heading = document.createElement('h2');
+  heading.textContent = 'Student Prefect Election 2026';
 
-      <hr>
+  const loggedIn = document.createElement('p');
+  loggedIn.textContent = 'Admin: ' + user.email;
 
-      <h3>Election Control</h3>
+  const controlHeading = document.createElement('h3');
+  controlHeading.textContent = 'Election Control';
 
-      <p>
-        Status:
-        <strong>${settings.is_open ? 'OPEN' : 'CLOSED'}</strong>
-      </p>
+  const status = document.createElement('p');
+  status.textContent = 'Status: ' + (settings.is_open ? 'OPEN' : 'CLOSED');
 
-      <button id="toggleElection">
-        ${settings.is_open ? 'Close Voting' : 'Open Voting'}
-      </button>
+  const toggle = document.createElement('button');
+  toggle.textContent = settings.is_open ? 'Close Voting' : 'Open Voting';
 
-      <button id="logout">Logout</button>
+  const logout = document.createElement('button');
+  logout.textContent = 'Logout';
 
-      <p id="dashboardMessage"></p>
-    </main>
-  `;
+  const message = document.createElement('p');
 
-  document.querySelector('#logout').addEventListener('click', async function () {
-    await supabase.auth.signOut();
-    showLogin();
-  });
+  app.appendChild(title);
+  app.appendChild(heading);
+  app.appendChild(loggedIn);
+  app.appendChild(controlHeading);
+  app.appendChild(status);
+  app.appendChild(toggle);
+  app.appendChild(logout);
+  app.appendChild(message);
 
-  document.querySelector('#toggleElection').addEventListener('click', async function () {
-    const newStatus = !settings.is_open;
-
+  toggle.addEventListener('click', async function () {
     const updateResult = await supabase
       .from('election_settings')
       .update({
-        is_open: newStatus
+        is_open: !settings.is_open
       })
       .eq('id', settings.id);
-
-    const message = document.querySelector('#dashboardMessage');
 
     if (updateResult.error) {
       message.textContent = updateResult.error.message;
       return;
     }
 
-    await loadDashboard();
+    dashboard();
+  });
+
+  logout.addEventListener('click', async function () {
+    await supabase.auth.signOut();
+    loginScreen();
   });
 }
 
@@ -167,9 +198,9 @@ async function start() {
   const sessionResult = await supabase.auth.getSession();
 
   if (sessionResult.data.session) {
-    await loadDashboard();
+    dashboard();
   } else {
-    showLogin();
+    loginScreen();
   }
 }
 
