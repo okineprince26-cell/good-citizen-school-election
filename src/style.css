@@ -64,13 +64,17 @@ h1{
 }
 
 /* Candidate photos on the student voting page */
-.candidate img{
-  width:60px;
-  height:60px;
-  object-fit:cover;
-  border-radius:50%;
-  display:block;
-  margin:10px auto;
+.candidate img {
+  width: 60px !important;
+  height: 60px !important;
+  max-width: 60px !important;
+  max-height: 60px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+  object-fit: cover !important;
+  border-radius: 50%;
+  display: block;
+  margin: 10px auto;
 }
 
 .candidate:has(input:checked){
