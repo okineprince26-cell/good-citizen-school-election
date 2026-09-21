@@ -36,12 +36,11 @@ async function load() {
       .select('id, name, display_order')
       .order('display_order'),
 
-    supabase
-      .from('candidates')
-      .select('id, position_id, name, photo_url, display_order, active')
-      .eq('active', true)
-      .order('position_id')
-      .order('display_order'),
+  supabase
+  .from('candidates')
+  .select('id, position_id, name, photo_url, display_order, active')
+  .order('position_id')
+  .order('display_order'),
 supabase
   .from('election_settings')
   .select('id, school_name, election_title, is_open, show_student_results')
