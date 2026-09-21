@@ -1,4 +1,5 @@
 
+```javascript
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -8,107 +9,190 @@ const supabase = createClient(
 
 const app = document.querySelector('#app');
 
-async function loadAdmin() {
-  const result = await supabase.auth.getUser();
-  const user = result.data.user;
-
-  if (!user) {
-    app.innerHTML = `
+function showLogin(message = '') {
+  app.innerHTML = `
+    <main style="max-width:500px;margin:40px auto;padding:20px;font-family:Arial;">
+      <h1>GOOD CITIZEN SCHOOL</h1>
       <h2>Admin Login</h2>
-      <input id="email" type="email" placeholder="Admin email">
-      <input id="password" type="password" placeholder="Password">
-      <button id="login">Login</button>
-      <p id="message"></p>
-    `;
 
-    document.querySelector('#login').onclick = async () => {
-      const email = document.querySelector('#email').value.trim();
-      const password = document.querySelector('#password').value;
+      <input
+        id="email"
+        type="email"
+        placeholder="Admin email"
+        style="display:block;width:100%;padding:12px;margin:10px 0;"
+      >
 
-      const loginResult = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+      <input
+        id="password"
+        type="password"
+        placeholder="Password"
+        style="display:block;width:100%;padding:12px;margin:10px 0;"
+      >
+
+      <button
+        id="login"
+        type="button"
+        style="padding:12px 20px;cursor:pointer;"
+      >
+        Login
+      </button>
+
+      <p id="message" style="margin-top:15px;color:#b00020;">
+        ${message}
+      </p>
+    </main>
+  `;
+
+  const loginButton = document.querySelector('#login');
+
+  loginButton.addEventListener('click', async () => {
+    const email = document.querySelector('#email').value.trim();
+    const password = document.querySelector('#password').value;
+    const messageBox = document.querySelector('#message');
+
+    if (!email || !password) {
+      messageBox.textContent = 'Please enter your email and password.';
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent = 'Logging in...';
+    messageBox.textContent = '';
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      if (loginResult.error) {
-        document.querySelector('#message').textContent =
-          loginResult.error.message;
+      if (error) {
+        messageBox.textContent = error.message;
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
         return;
       }
 
-      loadAdmin();
-    };
+      if (!data.user) {
+        messageBox.textContent = 'Login failed. No user was returned.';
+        loginButton.disabled = false;
+        loginButton.textContent = 'Login';
+        return;
+      }
 
+      await loadDashboard();
+
+    } catch (error) {
+      messageBox.textContent =
+        error?.message || 'An unexpected error occurred.';
+      loginButton.disabled = false;
+      loginButton.textContent = 'Login';
+    }
+  });
+}
+
+async function loadDashboard() {
+  const { data: userData, error: userError } =
+    await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    showLogin(userError?.message || 'Please log in.');
     return;
   }
 
-  const settingsResult = await supabase
+  const user = userData.user;
+
+  const { data: settings, error } = await supabase
     .from('election_settings')
     .select('*')
     .limit(1)
     .maybeSingle();
 
-  if (settingsResult.error) {
+  if (error) {
     app.innerHTML = `
-      <h2>Admin Dashboard</h2>
-      <p>Logged in as: ${user.email}</p>
-      <p>Could not load election settings.</p>
-      <p>${settingsResult.error.message}</p>
-      <button id="logout">Logout</button>
+      <main style="max-width:700px;margin:40px auto;padding:20px;font-family:Arial;">
+        <h1>GOOD CITIZEN SCHOOL</h1>
+        <h2>Admin Dashboard</h2>
+        <p>Logged in as: ${user.email}</p>
+        <p style="color:#b00020;">${error.message}</p>
+        <button id="logout">Logout</button>
+      </main>
     `;
 
-    document.querySelector('#logout').onclick = async () => {
+    document.querySelector('#logout').addEventListener('click', async () => {
       await supabase.auth.signOut();
-      loadAdmin();
-    };
+      showLogin();
+    });
 
     return;
   }
 
-  const settings = settingsResult.data;
-
   app.innerHTML = `
-    <h2>Admin Dashboard</h2>
-    <p><strong>Admin:</strong> ${user.email}</p>
+    <main style="max-width:800px;margin:40px auto;padding:20px;font-family:Arial;">
+      <h1>GOOD CITIZEN SCHOOL</h1>
+      <h2>Student Prefect Election 2026</h2>
 
-    <hr>
+      <p><strong>Admin:</strong> ${user.email}</p>
 
-    <h3>Election Control</h3>
+      <hr>
 
-    <p>
-      Status:
-      <strong>${settings.is_open ? 'OPEN' : 'CLOSED'}</strong>
-    </p>
+      <h3>Election Control</h3>
 
-    <button id="toggleElection">
-      ${settings.is_open ? 'Close Voting' : 'Open Voting'}
-    </button>
+      <p>
+        Current status:
+        <strong>${settings?.is_open ? 'OPEN' : 'CLOSED'}</strong>
+      </p>
 
-    <hr>
+      <button id="toggleElection">
+        ${settings?.is_open ? 'Close Voting' : 'Open Voting'}
+      </button>
 
-    <button id="logout">Logout</button>
+      <button id="logout" style="margin-left:10px;">
+        Logout
+      </button>
+
+      <p id="dashboardMessage"></p>
+    </main>
   `;
 
-  document.querySelector('#toggleElection').onclick = async () => {
-    const newStatus = !settings.is_open;
+  document.querySelector('#logout').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    showLogin();
+  });
 
-    const updateResult = await supabase
+  document.querySelector('#toggleElection').addEventListener('click', async () => {
+    if (!settings) return;
+
+    const newStatus = !settings.is_open;
+    const message = document.querySelector('#dashboardMessage');
+
+    const { error } = await supabase
       .from('election_settings')
       .update({ is_open: newStatus })
       .eq('id', settings.id);
 
-    if (updateResult.error) {
-      alert(updateResult.error.message);
+    if (error) {
+      message.textContent = error.message;
+      message.style.color = '#b00020';
       return;
     }
 
-    loadAdmin();
-  };
-
-  document.querySelector('#logout').onclick = async () => {
-    await supabase.auth.signOut();
-    loadAdmin();
-  };
+    await loadDashboard();
+  });
 }
 
-loadAdmin();
+async function start() {
+  try {
+    const { data } = await supabase.auth.getSession();
+
+    if (data.session) {
+      await loadDashboard();
+    } else {
+      showLogin();
+    }
+  } catch (error) {
+    showLogin(error?.message || 'Unable to connect.');
+  }
+}
+
+start();
+```
