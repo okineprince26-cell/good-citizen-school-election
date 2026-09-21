@@ -43,11 +43,11 @@ async function load() {
       .order('position_id')
       .order('display_order'),
 
-    supabase
-      .from('election_settings')
-      .select('id, school_name, election_title, is_open, show_student_results')
-      .limit(1)
-      .maybeSingle()
+  supabase
+  .from('election_settings')
+  .select('id, school_name, election_title, is_open, show_student_results')
+  .eq('id', 1)
+  .maybeSingle()
   ]);
 
   if (positionsResult.error) throw positionsResult.error;
