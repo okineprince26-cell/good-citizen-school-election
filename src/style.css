@@ -1,1 +1,146 @@
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f4f7fb;color:#172033}.wrap{max-width:900px;margin:auto;padding:24px 16px 60px}header{text-align:center;padding:30px 10px}header>b{background:#172033;color:white;padding:8px 13px;border-radius:999px;font-size:12px;letter-spacing:.08em}h1{font-size:clamp(28px,6vw,46px);margin:18px 0 8px}.card{background:white;border:1px solid #e1e7ef;border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 7px 24px #17203310}.card h2{margin-top:0}.card form{display:grid;gap:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.candidate{border:2px solid #e3e8ef;border-radius:14px;padding:15px;cursor:pointer}.candidate:has(input:checked){border-color:#172033;background:#f3f6fa}.candidate input{margin-right:8px}input{padding:14px;border:1px solid #ccd5e2;border-radius:11px;font-size:16px}button{border:0;border-radius:11px;padding:14px 18px;background:#172033;color:white;font-weight:800;font-size:16px;cursor:pointer}.alt{margin-top:12px;background:#e9eef5;color:#172033}.status{margin-top:14px;padding:12px;background:#eef3f9;border-radius:10px}.err{color:#9b2226;background:#fff0f0;padding:12px;border-radius:10px}.center{text-align:center}.row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #edf0f4}.row:last-child{border:0}@media(max-width:560px){.wrap{padding:12px}.card{padding:16px}}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+  background:#f4f7fb;
+  color:#172033
+}
+
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:24px 16px 60px
+}
+
+header{
+  text-align:center;
+  padding:30px 10px
+}
+
+header>b{
+  background:#172033;
+  color:white;
+  padding:8px 13px;
+  border-radius:999px;
+  font-size:12px;
+  letter-spacing:.08em
+}
+
+h1{
+  font-size:clamp(28px,6vw,46px);
+  margin:18px 0 8px
+}
+
+.card{
+  background:white;
+  border:1px solid #e1e7ef;
+  border-radius:18px;
+  padding:20px;
+  margin:14px 0;
+  box-shadow:0 7px 24px #17203310
+}
+
+.card h2{
+  margin-top:0
+}
+
+.card form{
+  display:grid;
+  gap:12px
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px
+}
+
+.candidate{
+  border:2px solid #e3e8ef;
+  border-radius:14px;
+  padding:15px;
+  cursor:pointer
+}
+
+/* Candidate photos on the student voting page */
+.candidate img{
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:50%;
+  display:block;
+  margin:10px auto;
+}
+
+.candidate:has(input:checked){
+  border-color:#172033;
+  background:#f3f6fa
+}
+
+.candidate input{
+  margin-right:8px
+}
+
+input{
+  padding:14px;
+  border:1px solid #ccd5e2;
+  border-radius:11px;
+  font-size:16px
+}
+
+button{
+  border:0;
+  border-radius:11px;
+  padding:14px 18px;
+  background:#172033;
+  color:white;
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer
+}
+
+.alt{
+  margin-top:12px;
+  background:#e9eef5;
+  color:#172033
+}
+
+.status{
+  margin-top:14px;
+  padding:12px;
+  background:#eef3f9;
+  border-radius:10px
+}
+
+.err{
+  color:#9b2226;
+  background:#fff0f0;
+  padding:12px;
+  border-radius:10px
+}
+
+.center{
+  text-align:center
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  padding:13px 0;
+  border-bottom:1px solid #edf0f4
+}
+
+.row:last-child{
+  border:0
+}
+
+@media(max-width:560px){
+  .wrap{
+    padding:12px
+  }
+
+  .card{
+    padding:16px
+  }
+}
