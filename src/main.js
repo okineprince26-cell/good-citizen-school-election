@@ -234,10 +234,18 @@ function showBallot() {
                           `
                           : ''
                       }
-
-                      <span>
-                        ${esc(candidate.name)}
-                      </span>
+<span style="
+  display:block;
+  text-align:center;
+  margin-top:10px;
+  font-size:17px;
+  font-weight:700;
+  color:#172033;
+">
+  ${esc(candidate.name)}
+</span>
+  
+                      
 
                     </label>
                   `;
