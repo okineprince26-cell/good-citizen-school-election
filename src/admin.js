@@ -1,6 +1,20 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOOD CITIZEN SCHOOL – Admin</title>
+</head>
+<body>
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  <h1>GOOD CITIZEN SCHOOL</h1>
+  <h2>Student Prefect Election 2026 – Admin</h2>
+
+  <div id="app">
+    Loading admin dashboard...
+  </div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>
