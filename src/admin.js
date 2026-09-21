@@ -1,3 +1,4 @@
+```javascript
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -351,8 +352,6 @@ async function loadStudents() {
 
   content.appendChild(heading);
 
-  /* Add student */
-
   const addHeading =
     document.createElement('h4');
 
@@ -424,8 +423,6 @@ async function loadStudents() {
   content.appendChild(addHeading);
   content.appendChild(nameInput);
   content.appendChild(addButton);
-
-  /* Student list */
 
   const listHeading =
     document.createElement('h4');
@@ -527,6 +524,108 @@ async function loadCandidates() {
     'Candidates';
 
   content.appendChild(heading);
+
+  /* =========================
+     ADD CANDIDATE
+  ========================= */
+
+  const addSection =
+    document.createElement('section');
+
+  const addHeading =
+    document.createElement('h4');
+
+  addHeading.textContent =
+    'Add Candidate';
+
+  const positionSelect =
+    document.createElement('select');
+
+  positions.forEach(function (position) {
+
+    const option =
+      document.createElement('option');
+
+    option.value = position.id;
+    option.textContent = position.name;
+
+    positionSelect.appendChild(option);
+  });
+
+  const candidateNameInput =
+    document.createElement('input');
+
+  candidateNameInput.placeholder =
+    'Candidate name';
+
+  candidateNameInput.type = 'text';
+
+  const addCandidateButton =
+    button(
+      'Add Candidate',
+      async function () {
+
+        const name =
+          candidateNameInput.value.trim();
+
+        const positionId =
+          Number(positionSelect.value);
+
+        if (!name) {
+          alert('Enter the candidate name.');
+          return;
+        }
+
+        if (!positionId) {
+          alert('Select a position.');
+          return;
+        }
+
+        addCandidateButton.disabled = true;
+        addCandidateButton.textContent =
+          'Adding...';
+
+        const result =
+          await supabase.rpc(
+            'admin_add_candidate',
+            {
+              p_position_id: positionId,
+              p_name: name,
+              p_photo_url: null
+            }
+          );
+
+        if (result.error) {
+
+          alert(result.error.message);
+
+          addCandidateButton.disabled = false;
+          addCandidateButton.textContent =
+            'Add Candidate';
+
+          return;
+        }
+
+        alert(
+          'Candidate added successfully.'
+        );
+
+        candidateNameInput.value = '';
+
+        loadCandidates();
+      }
+    );
+
+  addSection.appendChild(addHeading);
+  addSection.appendChild(positionSelect);
+  addSection.appendChild(candidateNameInput);
+  addSection.appendChild(addCandidateButton);
+
+  content.appendChild(addSection);
+
+  /* =========================
+     EXISTING CANDIDATES
+  ========================= */
 
   positions.forEach(function (position) {
 
@@ -644,10 +743,17 @@ async function loadCandidates() {
 
         row.appendChild(name);
         row.appendChild(status);
+
         row.appendChild(
           document.createTextNode(' ')
         );
+
         row.appendChild(rename);
+
+        row.appendChild(
+          document.createTextNode(' ')
+        );
+
         row.appendChild(toggle);
 
         section.appendChild(row);
@@ -754,3 +860,4 @@ async function loadResults() {
 ========================= */
 
 start();
+```
