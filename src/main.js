@@ -205,49 +205,71 @@ function showBallot() {
                 ${positionCandidates.map(function (candidate) {
 
                   return `
-                    <label class="candidate">
+                   <div
+  class="candidate"
+  style="
+    display:block;
+    text-align:center;
+    color:#172033;
+    background:#ffffff;
+    padding:18px;
+    border:2px solid #e3e8ef;
+    border-radius:14px;
+  "
+>
 
-                      <input
-                        type="radio"
-                        name="position-${esc(position.id)}"
-                        value="${esc(candidate.id)}"
-                        required
-                      >
+  <label style="
+    display:block;
+    cursor:pointer;
+  ">
 
-                      ${
-                        candidate.photo_url
-                          ? `
-                            <img
-                              src="${esc(candidate.photo_url)}"
-                              alt="${esc(candidate.name)}"
-                              style="
-                                width:80px;
-                                height:80px;
-                                max-width:80px;
-                                max-height:80px;
-                                object-fit:cover;
-                                border-radius:50%;
-                                display:block;
-                                margin:10px auto;
-                              "
-                            >
-                          `
-                          : ''
-                      }
-<span style="
-  display:block;
-  text-align:center;
-  margin-top:10px;
-  font-size:17px;
-  font-weight:700;
-  color:#172033;
-">
-  ${esc(candidate.name)}
-</span>
-  
-                      
+    <input
+      type="radio"
+      name="position-${esc(position.id)}"
+      value="${esc(candidate.id)}"
+      required
+      style="
+        display:inline-block;
+        margin:0 0 12px 0;
+      "
+    >
 
-                    </label>
+    ${
+      candidate.photo_url
+        ? `
+          <img
+            src="${esc(candidate.photo_url)}"
+            alt="${esc(candidate.name)}"
+            style="
+              width:80px !important;
+              height:80px !important;
+              object-fit:cover;
+              border-radius:50%;
+              display:block;
+              margin:0 auto 12px auto;
+            "
+          >
+        `
+        : ''
+    }
+
+    <div style="
+      display:block !important;
+      visibility:visible !important;
+      opacity:1 !important;
+      color:#172033 !important;
+      font-size:18px !important;
+      font-weight:800 !important;
+      text-align:center !important;
+      line-height:1.4 !important;
+      min-height:25px;
+    ">
+      ${esc(candidate.name)}
+    </div>
+
+  </label>
+
+</div>
                   `;
 
                 }).join('')}
