@@ -46,8 +46,9 @@ async function load() {
     supabase
       .from('election_settings')
       .select('id, school_name, election_title, is_open, show_student_results')
-      .eq('id', 1)
-      .single()
+   .eq('id', 1)
+.limit(1)
+.maybeSingle() 
   ]);
 
   if (positionsResult.error) throw positionsResult.error;
