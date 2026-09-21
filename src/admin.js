@@ -1,36 +1,43 @@
-import { supabase } from "./supabase.js";
+```javascript
+import { createClient } from '@supabase/supabase-js';
 
-const app = document.getElementById("app");
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
+
+const app = document.querySelector('#app');
 
 async function loadAdmin() {
   const {
-    data: { user }
+    data: { user },
+    error: userError
   } = await supabase.auth.getUser();
+
+  if (userError) {
+    app.innerHTML = `
+      <h2>Connection error</h2>
+      <p>${userError.message}</p>
+    `;
+    return;
+  }
 
   if (!user) {
     app.innerHTML = `
       <h2>Admin Login</h2>
 
-      <input
-        id="email"
-        type="email"
-        placeholder="Admin email"
-      >
+      <input id="email" type="email" placeholder="Admin email">
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Password"
-      >
+      <input id="password" type="password" placeholder="Password">
 
       <button id="login">Login</button>
 
       <p id="message"></p>
     `;
 
-    document.getElementById("login").onclick = async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
+    document.querySelector('#login').onclick = async () => {
+      const email = document.querySelector('#email').value.trim();
+      const password = document.querySelector('#password').value;
 
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -38,7 +45,7 @@ async function loadAdmin() {
       });
 
       if (error) {
-        document.getElementById("message").textContent =
+        document.querySelector('#message').textContent =
           error.message;
         return;
       }
@@ -50,20 +57,21 @@ async function loadAdmin() {
   }
 
   const { data: settings, error } = await supabase
-    .from("election_settings")
-    .select("*")
+    .from('election_settings')
+    .select('*')
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error) {
     app.innerHTML = `
       <h2>Admin Dashboard</h2>
       <p>Logged in as: ${user.email}</p>
       <p>Could not load election settings.</p>
+      <p>${error.message}</p>
       <button id="logout">Logout</button>
     `;
 
-    document.getElementById("logout").onclick = async () => {
+    document.querySelector('#logout').onclick = async () => {
       await supabase.auth.signOut();
       loadAdmin();
     };
@@ -82,11 +90,11 @@ async function loadAdmin() {
 
     <p>
       Status:
-      <strong>${settings.is_open ? "OPEN" : "CLOSED"}</strong>
+      <strong>${settings?.is_open ? 'OPEN' : 'CLOSED'}</strong>
     </p>
 
     <button id="toggleElection">
-      ${settings.is_open ? "Close Voting" : "Open Voting"}
+      ${settings?.is_open ? 'Close Voting' : 'Open Voting'}
     </button>
 
     <hr>
@@ -94,13 +102,13 @@ async function loadAdmin() {
     <button id="logout">Logout</button>
   `;
 
-  document.getElementById("toggleElection").onclick = async () => {
+  document.querySelector('#toggleElection').onclick = async () => {
     const newStatus = !settings.is_open;
 
     const { error } = await supabase
-      .from("election_settings")
+      .from('election_settings')
       .update({ is_open: newStatus })
-      .eq("id", settings.id);
+      .eq('id', settings.id);
 
     if (error) {
       alert(error.message);
@@ -110,10 +118,11 @@ async function loadAdmin() {
     loadAdmin();
   };
 
-  document.getElementById("logout").onclick = async () => {
+  document.querySelector('#logout').onclick = async () => {
     await supabase.auth.signOut();
     loadAdmin();
   };
 }
 
 loadAdmin();
+```
