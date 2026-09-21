@@ -57,7 +57,7 @@ supabase
 
   positions = positionsResult.data || [];
   candidates = candidatesResult.data || [];
-  settings = settingsResult.data;
+  settings = settingsResult.data || {};
 
   console.log('ELECTION SETTINGS:', settings);
 }
