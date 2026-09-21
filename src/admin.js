@@ -1,4 +1,3 @@
-
 ```javascript
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,41 +10,23 @@ const app = document.querySelector('#app');
 
 function showLogin(message = '') {
   app.innerHTML = `
-    <main style="max-width:500px;margin:40px auto;padding:20px;font-family:Arial;">
+    <main>
       <h1>GOOD CITIZEN SCHOOL</h1>
       <h2>Admin Login</h2>
 
-      <input
-        id="email"
-        type="email"
-        placeholder="Admin email"
-        style="display:block;width:100%;padding:12px;margin:10px 0;"
-      >
+      <input id="email" type="email" placeholder="Admin email">
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Password"
-        style="display:block;width:100%;padding:12px;margin:10px 0;"
-      >
+      <input id="password" type="password" placeholder="Password">
 
-      <button
-        id="login"
-        type="button"
-        style="padding:12px 20px;cursor:pointer;"
-      >
-        Login
-      </button>
+      <button id="login" type="button">Login</button>
 
-      <p id="message" style="margin-top:15px;color:#b00020;">
-        ${message}
-      </p>
+      <p id="message">${message}</p>
     </main>
   `;
 
   const loginButton = document.querySelector('#login');
 
-  loginButton.addEventListener('click', async () => {
+  loginButton.addEventListener('click', async function () {
     const email = document.querySelector('#email').value.trim();
     const password = document.querySelector('#password').value;
     const messageBox = document.querySelector('#message');
@@ -60,20 +41,20 @@ function showLogin(message = '') {
     messageBox.textContent = '';
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const result = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
       });
 
-      if (error) {
-        messageBox.textContent = error.message;
+      if (result.error) {
+        messageBox.textContent = result.error.message;
         loginButton.disabled = false;
         loginButton.textContent = 'Login';
         return;
       }
 
-      if (!data.user) {
-        messageBox.textContent = 'Login failed. No user was returned.';
+      if (!result.data.user) {
+        messageBox.textContent = 'Login failed.';
         loginButton.disabled = false;
         loginButton.textContent = 'Login';
         return;
@@ -82,8 +63,7 @@ function showLogin(message = '') {
       await loadDashboard();
 
     } catch (error) {
-      messageBox.textContent =
-        error?.message || 'An unexpected error occurred.';
+      messageBox.textContent = error.message || 'Login error.';
       loginButton.disabled = false;
       loginButton.textContent = 'Login';
     }
@@ -91,34 +71,36 @@ function showLogin(message = '') {
 }
 
 async function loadDashboard() {
-  const { data: userData, error: userError } =
-    await supabase.auth.getUser();
+  const result = await supabase.auth.getUser();
 
-  if (userError || !userData.user) {
-    showLogin(userError?.message || 'Please log in.');
+  if (result.error || !result.data.user) {
+    showLogin();
     return;
   }
 
-  const user = userData.user;
+  const user = result.data.user;
 
-  const { data: settings, error } = await supabase
+  const settingsResult = await supabase
     .from('election_settings')
     .select('*')
     .limit(1)
     .maybeSingle();
 
-  if (error) {
+  if (settingsResult.error) {
     app.innerHTML = `
-      <main style="max-width:700px;margin:40px auto;padding:20px;font-family:Arial;">
+      <main>
         <h1>GOOD CITIZEN SCHOOL</h1>
         <h2>Admin Dashboard</h2>
+
         <p>Logged in as: ${user.email}</p>
-        <p style="color:#b00020;">${error.message}</p>
+
+        <p>${settingsResult.error.message}</p>
+
         <button id="logout">Logout</button>
       </main>
     `;
 
-    document.querySelector('#logout').addEventListener('click', async () => {
+    document.querySelector('#logout').addEventListener('click', async function () {
       await supabase.auth.signOut();
       showLogin();
     });
@@ -126,53 +108,54 @@ async function loadDashboard() {
     return;
   }
 
+  const settings = settingsResult.data;
+
   app.innerHTML = `
-    <main style="max-width:800px;margin:40px auto;padding:20px;font-family:Arial;">
+    <main>
       <h1>GOOD CITIZEN SCHOOL</h1>
+
       <h2>Student Prefect Election 2026</h2>
 
-      <p><strong>Admin:</strong> ${user.email}</p>
+      <p>Admin: ${user.email}</p>
 
       <hr>
 
       <h3>Election Control</h3>
 
       <p>
-        Current status:
-        <strong>${settings?.is_open ? 'OPEN' : 'CLOSED'}</strong>
+        Status:
+        <strong>${settings.is_open ? 'OPEN' : 'CLOSED'}</strong>
       </p>
 
       <button id="toggleElection">
-        ${settings?.is_open ? 'Close Voting' : 'Open Voting'}
+        ${settings.is_open ? 'Close Voting' : 'Open Voting'}
       </button>
 
-      <button id="logout" style="margin-left:10px;">
-        Logout
-      </button>
+      <button id="logout">Logout</button>
 
       <p id="dashboardMessage"></p>
     </main>
   `;
 
-  document.querySelector('#logout').addEventListener('click', async () => {
+  document.querySelector('#logout').addEventListener('click', async function () {
     await supabase.auth.signOut();
     showLogin();
   });
 
-  document.querySelector('#toggleElection').addEventListener('click', async () => {
-    if (!settings) return;
-
+  document.querySelector('#toggleElection').addEventListener('click', async function () {
     const newStatus = !settings.is_open;
-    const message = document.querySelector('#dashboardMessage');
 
-    const { error } = await supabase
+    const updateResult = await supabase
       .from('election_settings')
-      .update({ is_open: newStatus })
+      .update({
+        is_open: newStatus
+      })
       .eq('id', settings.id);
 
-    if (error) {
-      message.textContent = error.message;
-      message.style.color = '#b00020';
+    const message = document.querySelector('#dashboardMessage');
+
+    if (updateResult.error) {
+      message.textContent = updateResult.error.message;
       return;
     }
 
@@ -181,16 +164,12 @@ async function loadDashboard() {
 }
 
 async function start() {
-  try {
-    const { data } = await supabase.auth.getSession();
+  const sessionResult = await supabase.auth.getSession();
 
-    if (data.session) {
-      await loadDashboard();
-    } else {
-      showLogin();
-    }
-  } catch (error) {
-    showLogin(error?.message || 'Unable to connect.');
+  if (sessionResult.data.session) {
+    await loadDashboard();
+  } else {
+    showLogin();
   }
 }
 
