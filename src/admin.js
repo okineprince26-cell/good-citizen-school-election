@@ -1,4 +1,4 @@
-```javascript
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -9,29 +9,15 @@ const supabase = createClient(
 const app = document.querySelector('#app');
 
 async function loadAdmin() {
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    app.innerHTML = `
-      <h2>Connection error</h2>
-      <p>${userError.message}</p>
-    `;
-    return;
-  }
+  const result = await supabase.auth.getUser();
+  const user = result.data.user;
 
   if (!user) {
     app.innerHTML = `
       <h2>Admin Login</h2>
-
       <input id="email" type="email" placeholder="Admin email">
-
       <input id="password" type="password" placeholder="Password">
-
       <button id="login">Login</button>
-
       <p id="message"></p>
     `;
 
@@ -39,14 +25,14 @@ async function loadAdmin() {
       const email = document.querySelector('#email').value.trim();
       const password = document.querySelector('#password').value;
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const loginResult = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
       });
 
-      if (error) {
+      if (loginResult.error) {
         document.querySelector('#message').textContent =
-          error.message;
+          loginResult.error.message;
         return;
       }
 
@@ -56,18 +42,18 @@ async function loadAdmin() {
     return;
   }
 
-  const { data: settings, error } = await supabase
+  const settingsResult = await supabase
     .from('election_settings')
     .select('*')
     .limit(1)
     .maybeSingle();
 
-  if (error) {
+  if (settingsResult.error) {
     app.innerHTML = `
       <h2>Admin Dashboard</h2>
       <p>Logged in as: ${user.email}</p>
       <p>Could not load election settings.</p>
-      <p>${error.message}</p>
+      <p>${settingsResult.error.message}</p>
       <button id="logout">Logout</button>
     `;
 
@@ -79,9 +65,10 @@ async function loadAdmin() {
     return;
   }
 
+  const settings = settingsResult.data;
+
   app.innerHTML = `
     <h2>Admin Dashboard</h2>
-
     <p><strong>Admin:</strong> ${user.email}</p>
 
     <hr>
@@ -90,11 +77,11 @@ async function loadAdmin() {
 
     <p>
       Status:
-      <strong>${settings?.is_open ? 'OPEN' : 'CLOSED'}</strong>
+      <strong>${settings.is_open ? 'OPEN' : 'CLOSED'}</strong>
     </p>
 
     <button id="toggleElection">
-      ${settings?.is_open ? 'Close Voting' : 'Open Voting'}
+      ${settings.is_open ? 'Close Voting' : 'Open Voting'}
     </button>
 
     <hr>
@@ -105,13 +92,13 @@ async function loadAdmin() {
   document.querySelector('#toggleElection').onclick = async () => {
     const newStatus = !settings.is_open;
 
-    const { error } = await supabase
+    const updateResult = await supabase
       .from('election_settings')
       .update({ is_open: newStatus })
       .eq('id', settings.id);
 
-    if (error) {
-      alert(error.message);
+    if (updateResult.error) {
+      alert(updateResult.error.message);
       return;
     }
 
@@ -125,4 +112,3 @@ async function loadAdmin() {
 }
 
 loadAdmin();
-```
