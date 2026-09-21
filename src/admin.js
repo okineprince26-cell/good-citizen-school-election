@@ -351,8 +351,6 @@ async function loadStudents() {
 
   content.appendChild(heading);
 
-  /* Add student */
-
   const addHeading =
     document.createElement('h4');
 
@@ -424,8 +422,6 @@ async function loadStudents() {
   content.appendChild(addHeading);
   content.appendChild(nameInput);
   content.appendChild(addButton);
-
-  /* Student list */
 
   const listHeading =
     document.createElement('h4');
@@ -528,72 +524,394 @@ async function loadCandidates() {
 
   content.appendChild(heading);
 
-  /* Add candidate */
-  const addSection = document.createElement('section');
+  /* =========================
+     ADD CANDIDATE
+  ========================= */
 
-  const addHeading = document.createElement('h4');
-  addHeading.textContent = 'Add Candidate';
+  const addSection =
+    document.createElement('section');
 
-  const positionSelect = document.createElement('select');
+  const addHeading =
+    document.createElement('h4');
+
+  addHeading.textContent =
+    'Add Candidate';
+
+  const positionSelect =
+    document.createElement('select');
 
   positions.forEach(function (position) {
-    const option = document.createElement('option');
-    option.value = position.id;
-    option.textContent = position.name;
+
+    const option =
+      document.createElement('option');
+
+    option.value =
+      position.id;
+
+    option.textContent =
+      position.name;
+
     positionSelect.appendChild(option);
   });
 
-  const candidateNameInput = document.createElement('input');
-  candidateNameInput.type = 'text';
-  candidateNameInput.placeholder = 'Candidate name';
+  const candidateNameInput =
+    document.createElement('input');
 
-  const addCandidateButton = button(
-    'Add Candidate',
-    async function () {
-      const name = candidateNameInput.value.trim();
-      const positionId = Number(positionSelect.value);
+  candidateNameInput.type =
+    'text';
 
-      if (!name) {
-        alert('Enter the candidate name.');
+  candidateNameInput.placeholder =
+    'Candidate name';
+
+  /* =========================
+     PHOTO INPUT
+  ========================= */
+
+  const photoLabel =
+    document.createElement('label');
+
+  photoLabel.textContent =
+    'Candidate Photo:';
+
+  photoLabel.style.display =
+    'block';
+
+  photoLabel.style.marginTop =
+    '10px';
+
+  const photoInput =
+    document.createElement('input');
+
+  photoInput.type =
+    'file';
+
+  photoInput.accept =
+    'image/*';
+
+  photoInput.style.display =
+    'block';
+
+  photoInput.style.marginTop =
+    '5px';
+
+  /* PHOTO PREVIEW */
+
+  const photoPreview =
+    document.createElement('img');
+
+  photoPreview.style.display =
+    'none';
+
+  photoPreview.style.width =
+    '120px';
+
+  photoPreview.style.height =
+    '120px';
+
+  photoPreview.style.objectFit =
+    'cover';
+
+  photoPreview.style.marginTop =
+    '10px';
+
+  photoPreview.style.borderRadius =
+    '8px';
+
+  photoPreview.style.border =
+    '1px solid #ccc';
+
+  photoInput.addEventListener(
+    'change',
+    function () {
+
+      const file =
+        photoInput.files[0];
+
+      if (!file) {
+
+        photoPreview.style.display =
+          'none';
+
         return;
       }
 
-      if (!positionId) {
-        alert('Select a position.');
+      if (!file.type.startsWith('image/')) {
+
+        alert(
+          'Please select an image file.'
+        );
+
+        photoInput.value = '';
+
+        photoPreview.style.display =
+          'none';
+
         return;
       }
 
-      addCandidateButton.disabled = true;
-      addCandidateButton.textContent = 'Adding...';
+      if (file.size > 5 * 1024 * 1024) {
 
-      const result = await supabase.rpc(
-        'admin_add_candidate',
-        {
-          p_position_id: positionId,
-          p_name: name,
-          p_photo_url: null
-        }
-      );
+        alert(
+          'The photo must be smaller than 5 MB.'
+        );
 
-      if (result.error) {
-        alert(result.error.message);
-        addCandidateButton.disabled = false;
-        addCandidateButton.textContent = 'Add Candidate';
+        photoInput.value = '';
+
+        photoPreview.style.display =
+          'none';
+
         return;
       }
 
-      alert('Candidate added successfully.');
-      candidateNameInput.value = '';
-      loadCandidates();
+      const previewUrl =
+        URL.createObjectURL(file);
+
+      photoPreview.src =
+        previewUrl;
+
+      photoPreview.style.display =
+        'block';
     }
   );
 
-  addSection.appendChild(addHeading);
-  addSection.appendChild(positionSelect);
-  addSection.appendChild(candidateNameInput);
-  addSection.appendChild(addCandidateButton);
+  /* =========================
+     ADD CANDIDATE BUTTON
+  ========================= */
 
-  content.appendChild(addSection);
+  const addCandidateButton =
+    button(
+      'Add Candidate',
+      async function () {
+
+        const name =
+          candidateNameInput.value.trim();
+
+        const positionId =
+          Number(positionSelect.value);
+
+        const photo =
+          photoInput.files[0];
+
+        if (!name) {
+
+          alert(
+            'Enter the candidate name.'
+          );
+
+          return;
+        }
+
+        if (!positionId) {
+
+          alert(
+            'Select a position.'
+          );
+
+          return;
+        }
+
+        if (!photo) {
+
+          alert(
+            'Please select a candidate photo.'
+          );
+
+          return;
+        }
+
+        if (!photo.type.startsWith('image/')) {
+
+          alert(
+            'Please select a valid image.'
+          );
+
+          return;
+        }
+
+        if (photo.size > 5 * 1024 * 1024) {
+
+          alert(
+            'The photo must be smaller than 5 MB.'
+          );
+
+          return;
+        }
+
+        addCandidateButton.disabled =
+          true;
+
+        addCandidateButton.textContent =
+          'Uploading photo...';
+
+        try {
+
+          /* =========================
+             CREATE UNIQUE FILE NAME
+          ========================= */
+
+          const fileExtension =
+            photo.name
+              .split('.')
+              .pop()
+              .toLowerCase();
+
+          const fileName =
+            crypto.randomUUID() +
+            '.' +
+            fileExtension;
+
+          const filePath =
+            fileName;
+
+          /* =========================
+             UPLOAD PHOTO
+          ========================= */
+
+          const upload =
+            await supabase.storage
+              .from('candidate-photos')
+              .upload(
+                filePath,
+                photo,
+                {
+                  cacheControl: '3600',
+                  upsert: false,
+                  contentType: photo.type
+                }
+              );
+
+          if (upload.error) {
+
+            throw upload.error;
+          }
+
+          addCandidateButton.textContent =
+            'Saving candidate...';
+
+          /* =========================
+             GET PUBLIC PHOTO URL
+          ========================= */
+
+          const publicUrl =
+            supabase.storage
+              .from('candidate-photos')
+              .getPublicUrl(filePath);
+
+          const photoUrl =
+            publicUrl.data.publicUrl;
+
+          /* =========================
+             ADD CANDIDATE
+          ========================= */
+
+          const result =
+            await supabase.rpc(
+              'admin_add_candidate',
+              {
+                p_position_id:
+                  positionId,
+
+                p_name:
+                  name,
+
+                p_photo_url:
+                  photoUrl
+              }
+            );
+
+          if (result.error) {
+
+            /* Remove uploaded photo
+               if candidate creation fails */
+
+            await supabase.storage
+              .from('candidate-photos')
+              .remove([filePath]);
+
+            throw result.error;
+          }
+
+          alert(
+            'Candidate added successfully.'
+          );
+
+          candidateNameInput.value =
+            '';
+
+          photoInput.value =
+            '';
+
+          photoPreview.src =
+            '';
+
+          photoPreview.style.display =
+            'none';
+
+          loadCandidates();
+
+        } catch (error) {
+
+          console.error(
+            'Candidate upload error:',
+            error
+          );
+
+          alert(
+            'Could not add candidate:\n\n' +
+            error.message
+          );
+
+          addCandidateButton.disabled =
+            false;
+
+          addCandidateButton.textContent =
+            'Add Candidate';
+
+          return;
+        }
+
+      }
+    );
+
+  addSection.appendChild(
+    addHeading
+  );
+
+  addSection.appendChild(
+    positionSelect
+  );
+
+  addSection.appendChild(
+    candidateNameInput
+  );
+
+  addSection.appendChild(
+    photoLabel
+  );
+
+  addSection.appendChild(
+    photoInput
+  );
+
+  addSection.appendChild(
+    photoPreview
+  );
+
+  addSection.appendChild(
+    document.createElement('br')
+  );
+
+  addSection.appendChild(
+    addCandidateButton
+  );
+
+  content.appendChild(
+    addSection
+  );
+
+  /* =========================
+     EXISTING CANDIDATES
+  ========================= */
 
   positions.forEach(function (position) {
 
@@ -612,9 +930,11 @@ async function loadCandidates() {
 
     const positionCandidates =
       candidates.filter(function (candidate) {
+
         return String(
           candidate.position_id
         ) === String(position.id);
+
       });
 
     positionCandidates.forEach(
@@ -624,7 +944,43 @@ async function loadCandidates() {
           document.createElement('div');
 
         row.style.marginBottom =
-          '12px';
+          '15px';
+
+        /* Candidate photo */
+
+        if (candidate.photo_url) {
+
+          const candidatePhoto =
+            document.createElement('img');
+
+          candidatePhoto.src =
+            candidate.photo_url;
+
+          candidatePhoto.alt =
+            candidate.name;
+
+          candidatePhoto.style.width =
+            '80px';
+
+          candidatePhoto.style.height =
+            '80px';
+
+          candidatePhoto.style.objectFit =
+            'cover';
+
+          candidatePhoto.style.display =
+            'block';
+
+          candidatePhoto.style.marginBottom =
+            '5px';
+
+          candidatePhoto.style.borderRadius =
+            '8px';
+
+          row.appendChild(
+            candidatePhoto
+          );
+        }
 
         const name =
           document.createElement('strong');
@@ -664,15 +1020,18 @@ async function loadCandidates() {
                   {
                     p_candidate_id:
                       candidate.id,
+
                     p_name:
                       newName.trim()
                   }
                 );
 
               if (update.error) {
+
                 alert(
                   update.error.message
                 );
+
                 return;
               }
 
@@ -685,6 +1044,7 @@ async function loadCandidates() {
             candidate.active
               ? 'Deactivate'
               : 'Activate',
+
             async function () {
 
               const update =
@@ -693,15 +1053,18 @@ async function loadCandidates() {
                   {
                     p_candidate_id:
                       candidate.id,
+
                     p_is_active:
                       !candidate.active
                   }
                 );
 
               if (update.error) {
+
                 alert(
                   update.error.message
                 );
+
                 return;
               }
 
@@ -709,19 +1072,35 @@ async function loadCandidates() {
             }
           );
 
-        row.appendChild(name);
-        row.appendChild(status);
+        row.appendChild(
+          name
+        );
+
+        row.appendChild(
+          status
+        );
+
         row.appendChild(
           document.createTextNode(' ')
         );
-        row.appendChild(rename);
-        row.appendChild(toggle);
 
-        section.appendChild(row);
+        row.appendChild(
+          rename
+        );
+
+        row.appendChild(
+          toggle
+        );
+
+        section.appendChild(
+          row
+        );
       }
     );
 
-    content.appendChild(section);
+    content.appendChild(
+      section
+    );
   });
 }
 
@@ -756,7 +1135,9 @@ async function loadResults() {
   heading.textContent =
     'Election Results';
 
-  content.appendChild(heading);
+  content.appendChild(
+    heading
+  );
 
   const rows =
     result.data || [];
@@ -764,14 +1145,19 @@ async function loadResults() {
   if (!rows.length) {
 
     content.appendChild(
-      message('No results available yet.')
+      message(
+        'No results available yet.'
+      )
     );
 
     return;
   }
 
-  let currentPosition = null;
-  let section = null;
+  let currentPosition =
+    null;
+
+  let section =
+    null;
 
   rows.forEach(function (row) {
 
@@ -784,21 +1170,31 @@ async function loadResults() {
         row.position_name;
 
       section =
-        document.createElement('section');
+        document.createElement(
+          'section'
+        );
 
       const position =
-        document.createElement('h4');
+        document.createElement(
+          'h4'
+        );
 
       position.textContent =
         row.position_name;
 
-      section.appendChild(position);
+      section.appendChild(
+        position
+      );
 
-      content.appendChild(section);
+      content.appendChild(
+        section
+      );
     }
 
     const item =
-      document.createElement('div');
+      document.createElement(
+        'div'
+      );
 
     item.style.marginBottom =
       '6px';
@@ -812,7 +1208,9 @@ async function loadResults() {
         .toFixed(1) +
       '%)';
 
-    section.appendChild(item);
+    section.appendChild(
+      item
+    );
   });
 }
 
